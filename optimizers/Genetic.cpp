@@ -8,29 +8,16 @@
 #include <iostream>
 #include "Genetic.h"
 
-using namespace std;
-
-default_random_engine gen;
-uniform_real_distribution<float> dist;
-uniform_real_distribution<float> norm;
-std::normal_distribution<float> std_dist;
-
-int pop_size;
-int param_count;
-int parent_count;
-float* params;
-
-auto populations = vector<pair<float, float*>>();
-
-float (*fun)(float*);
+std::default_random_engine gen;
+std::normal_distribution<float> mut_dist;
 
 Genetic::Genetic(int param_count, int pop_size, int parent_count, float domain_min, float domain_max, float randomness, float step_size, float (*fun)(float*)) {
     this->pop_size = pop_size;
     this->param_count = param_count;
     this->parent_count = parent_count;
 
-    uniform_real_distribution<float> dist(domain_min, domain_max);
-    uniform_real_distribution<float> norm(0, randomness);
+    std::uniform_real_distribution<float> dist(domain_min, domain_max);
+    std::uniform_real_distribution<float> norm(0, randomness);
 
     this->dist = dist;
     this->norm = norm;
@@ -40,6 +27,7 @@ Genetic::Genetic(int param_count, int pop_size, int parent_count, float domain_m
 
     this->fun = fun;
 
+    populations = std::vector<std::pair<float, float*>>();
     populations.reserve(pop_size);
     // Take random guess at param values and sort them
     for (int i = 0; i < pop_size; i++) {
@@ -68,7 +56,7 @@ void mutate(float* param, int size, float mutation_prob) {
  */
 void mutate(float* param, int size) {
     for (int i = 0; i < size; i++) {
-        param[i] += std_dist(gen);
+        param[i] += mut_dist(gen);
     }
 }
 float* cross(float* p1, float* p2, int size) {
@@ -91,8 +79,8 @@ void Genetic::optimize(int iterations) {
             float *baby = cross(p1, p2, param_count);
             mutate(baby, param_count);
             float fit = fun(baby) + norm(gen);
-            populations[pop_size - i - 1] = pair<float, float *>(fit, baby);
-            cout << "Loss: " << fun(populations[0].second) << "\n";
+            populations[pop_size - i - 1] = std::pair<float, float *>(fit, baby);
+            std::cout << "Loss: " << fun(populations[0].second) << "\n";
         }
         sort(populations.begin(), populations.end());
 

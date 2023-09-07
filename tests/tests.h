@@ -6,5 +6,6 @@
 #define OPTIMIZATION_TESTS_H
 
 void test_genetic();
+void test_sa();
 
 #endif //OPTIMIZATION_TESTS_H

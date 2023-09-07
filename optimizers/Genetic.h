@@ -8,9 +8,12 @@
 
 
 class Genetic {
+    std::default_random_engine gen;
     std::uniform_real_distribution<float> dist;
     std::uniform_real_distribution<float> norm;
     std::normal_distribution<float> mut_dist;
+
+    std::vector<std::pair<float, float*>> populations;
 
     int pop_size;
     int param_count;

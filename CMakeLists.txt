@@ -10,4 +10,6 @@ add_executable(optimization
         tests/functions.cpp
         tests/functions.h
         tests/tests.cpp
-        tests/tests.h)
+        tests/tests.h
+        optimizers/SimulatedAnnealing.cpp
+        optimizers/SimulatedAnnealing.h)
