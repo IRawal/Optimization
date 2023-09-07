@@ -10,7 +10,7 @@
 class Genetic {
     std::uniform_real_distribution<float> dist;
     std::uniform_real_distribution<float> norm;
-    std::normal_distribution<float> std_dist;
+    std::normal_distribution<float> mut_dist;
 
     int pop_size;
     int param_count;

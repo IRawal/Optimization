@@ -5,6 +5,7 @@
 #include <cstdlib>
 #include <random>
 #include <algorithm>
+#include <iostream>
 #include "Genetic.h"
 
 using namespace std;
@@ -12,6 +13,7 @@ using namespace std;
 default_random_engine gen;
 uniform_real_distribution<float> dist;
 uniform_real_distribution<float> norm;
+std::normal_distribution<float> std_dist;
 
 int pop_size;
 int param_count;
@@ -30,11 +32,11 @@ Genetic::Genetic(int param_count, int pop_size, int parent_count, float domain_m
     uniform_real_distribution<float> dist(domain_min, domain_max);
     uniform_real_distribution<float> norm(0, randomness);
 
-    float sigma = (domain_max - domain_min) * step_size;
-
-    this->std_dist = std::normal_distribution<float>(0, step_size);
     this->dist = dist;
     this->norm = norm;
+
+    float sigma = (domain_max - domain_min) * step_size;
+    this->mut_dist = std::normal_distribution<float>(0, sigma);
 
     this->fun = fun;
 
@@ -66,7 +68,7 @@ void mutate(float* param, int size, float mutation_prob) {
  */
 void mutate(float* param, int size) {
     for (int i = 0; i < size; i++) {
-        param[i] += dist(gen);
+        param[i] += std_dist(gen);
     }
 }
 float* cross(float* p1, float* p2, int size) {
@@ -90,8 +92,10 @@ void Genetic::optimize(int iterations) {
             mutate(baby, param_count);
             float fit = fun(baby) + norm(gen);
             populations[pop_size - i - 1] = pair<float, float *>(fit, baby);
+            cout << "Loss: " << fun(populations[0].second) << "\n";
         }
         sort(populations.begin(), populations.end());
+
     }
     // Evaluate true fits
     for (int i = 0; i < parent_count - 1; i++) {
@@ -99,5 +103,6 @@ void Genetic::optimize(int iterations) {
         float fit = fun(p1);
         populations[i].first = fit;
     }
+    sort(populations.begin(), populations.end());
     this->params = populations[0].second;
 }
