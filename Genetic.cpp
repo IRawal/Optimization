@@ -22,13 +22,17 @@ auto populations = vector<pair<float, float*>>();
 
 float (*fun)(float*);
 
-Genetic::Genetic(int param_count, int pop_size, int parent_count, int domain_min, int domain_max, float randomness, float (*fun)(float*)) {
+Genetic::Genetic(int param_count, int pop_size, int parent_count, float domain_min, float domain_max, float randomness, float step_size, float (*fun)(float*)) {
     this->pop_size = pop_size;
     this->param_count = param_count;
     this->parent_count = parent_count;
 
     uniform_real_distribution<float> dist(domain_min, domain_max);
     uniform_real_distribution<float> norm(0, randomness);
+
+    float sigma = (domain_max - domain_min) * step_size;
+
+    this->std_dist = std::normal_distribution<float>(0, step_size);
     this->dist = dist;
     this->norm = norm;
 
@@ -41,11 +45,13 @@ Genetic::Genetic(int param_count, int pop_size, int parent_count, int domain_min
         for (int k = 0; k < param_count; k++) {
             params[k] = dist(gen);
         }
-        float fit = fun(params) * norm(gen); // Add randomness to fitness
+        float fit = fun(params) + norm(gen); // Add randomness to fitness
         populations.emplace_back(fit, params);
     }
     sort(populations.begin(), populations.end());
 }
+/*
+ * Bit mutation, found to lead to NaNs and Infs
 void mutate(float* param, int size, float mutation_prob) {
     for (int i = 0; i < size; i++) {
         if ((rand() / (RAND_MAX + 1.0)) >= mutation_prob) {
@@ -57,25 +63,32 @@ void mutate(float* param, int size, float mutation_prob) {
         param[i] = * (float * ) &tmp;
     }
 }
-float* average(float* p1, float* p2, int size) {
-    float* baby = static_cast<float*>(malloc(sizeof(float) * size));
+ */
+void mutate(float* param, int size) {
     for (int i = 0; i < size; i++) {
-        baby[i] = (p1[i] + p2[i]) / 2;
+        param[i] += dist(gen);
+    }
+}
+float* cross(float* p1, float* p2, int size) {
+    auto baby = static_cast<float*>(malloc(sizeof(float) * size));
+    for (int i = 0; i < size; i++) {
+        if (rand() > (RAND_MAX / 2)) {
+            baby[i] = p1[i];
+        }
+        else {
+            baby[i] = p2[i];
+        }
     }
     return baby;
 }
 void Genetic::optimize(int iterations) {
     for (int k = 0; k < iterations; k++) {
         for (int i = 0; i < parent_count - 1; i++) {
-            if (i == 664)
-                int a = 1;
             float *p1 = populations[i].second;
             float *p2 = populations[i + 1].second;
-            float *baby = average(p1, p2, param_count);
-            mutate(baby, param_count, 0.2);
-            float fit = fun(baby) * norm(gen);
-            if (isnan(fit))
-                exit(-1);
+            float *baby = cross(p1, p2, param_count);
+            mutate(baby, param_count);
+            float fit = fun(baby) + norm(gen);
             populations[pop_size - i - 1] = pair<float, float *>(fit, baby);
         }
         sort(populations.begin(), populations.end());
